@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Condition 1: AI Label Present + Anonymous Review Present</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding: 30px 10px;
+      }
+      .frame {
+        width: 375px;
+        height: 812px;
+        background: #fff;
+        border-radius: 12px;
+        overflow-y: scroll;
+        overflow-x: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+      }
+      .title-bar {
+        background: #d6e8f7;
+        padding: 14px 20px;
+        text-align: center;
+        font-size: 15px;
+        font-weight: 600;
+        color: #222;
+      }
+      .body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 16px;
+        background: #f7f7f7;
+      }
+
+      /* ---- Player Panel ---- */
+      .player-card {
+        flex: 1;
+        background: #fff;
+        border-radius: 10px;
+        border: 1px solid #e0e0e0;
+        padding: 14px 14px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .now-playing-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #222;
+      }
+      .player-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .album-art {
+        width: 100px;
+        height: 100px;
+        border-radius: 6px;
+        background: linear-gradient(
+          180deg,
+          #c97a8a 0%,
+          #7b5ea7 40%,
+          #2d1b4e 100%
+        );
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+      }
+      .album-art::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40%;
+        background: linear-gradient(180deg, transparent, #1a0e35);
+      }
+      .album-art-mountains {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 45%;
+      }
+      .mountain-svg {
+        width: 100%;
+        height: 100%;
+      }
+      .song-info {
+        flex: 1;
+      }
+      .song-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 4px;
+      }
+      .song-artist {
+        font-size: 13px;
+        color: #888;
+      }
+
+      /* Progress bar */
+      .progress-section {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .progress-bar-wrap {
+        position: relative;
+        height: 4px;
+        background: #ddd;
+        border-radius: 2px;
+      }
+      .progress-fill {
+        width: 30%;
+        height: 100%;
+        background: #333;
+        border-radius: 2px;
+        position: relative;
+      }
+      .progress-thumb {
+        position: absolute;
+        right: -5px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 10px;
+        height: 10px;
+        background: #333;
+        border-radius: 50%;
+      }
+      .time-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: #888;
+      }
+
+      /* Controls */
+      .controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+      }
+      .ctrl-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #555;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+      }
+      .ctrl-btn.muted {
+        color: #aaa;
+        font-size: 14px;
+      }
+      .play-btn {
+        width: 40px;
+        height: 40px;
+        background: #111;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 16px;
+        padding-left: 2px;
+      }
+
+      .footer-note {
+        font-size: 10px;
+        color: #999;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: auto;
+        padding-top: 6px;
+      }
+
+      /* ---- Right Panel ---- */
+      .right-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .info-card {
+        background: #fff;
+        border-radius: 10px;
+        border: 1px solid #e0e0e0;
+        padding: 12px 14px;
+      }
+      .card-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #222;
+        margin-bottom: 8px;
+      }
+      .ai-badge {
+        background: #e8f0fb;
+        border: 1px solid #c5d9f0;
+        border-radius: 8px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .robot-icon {
+        width: 34px;
+        height: 34px;
+        flex-shrink: 0;
+        background: #b8cde0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+      }
+      .ai-text-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .ai-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #1a3a6a;
+      }
+      .ai-desc {
+        font-size: 11px;
+        color: #556;
+        line-height: 1.4;
+      }
+
+      .no-info-badge {
+        background: #f5efe0;
+        border: 1px solid #ddd0b8;
+        border-radius: 8px;
+        padding: 14px 12px;
+        text-align: center;
+        font-size: 12px;
+        color: #777766;
+        line-height: 1.5;
+      }
+
+      .comments-card {
+        background: #fff;
+        border-radius: 10px;
+        border: 1px solid #e0e0e0;
+        padding: 12px 14px;
+        flex: 1;
+      }
+      .comment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .comment-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 11.5px;
+        color: #333;
+        line-height: 1.45;
+      }
+      .user-icon {
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .user-icon svg {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Audio Element -->
+    <audio id="audioPlayer"></audio>
+    <div class="frame">
+      <div class="title-bar">
+        Condition 1: AI Label Present + Anonymous Review Present
+      </div>
+      <div class="body">
+        <!-- Player -->
+        <div class="player-card">
+          <div class="now-playing-label">현재 재생 중</div>
+          <div class="player-main">
+            <div class="album-art">
+              <div class="album-art-mountains">
+                <svg
+                  class="mountain-svg"
+                  viewBox="0 0 100 45"
+                  preserveAspectRatio="none"
+                >
+                  <polygon
+                    points="0,45 20,10 40,30 60,5 80,25 100,15 100,45"
+                    fill="#1a0e35"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div class="song-info">
+              <div class="song-title">Eternal Horizon</div>
+              <div class="song-artist">Unknown Artist</div>
+            </div>
+          </div>
+          <div class="progress-section">
+            <div class="progress-bar-wrap">
+              <div class="progress-fill" id="progressFill">
+                <div class="progress-thumb"></div>
+              </div>
+            </div>
+            <div class="time-row">
+              <span id="currentTime">0:00</span><span id="duration">0:00</span>
+            </div>
+          </div>
+          <div class="controls">
+            <button class="ctrl-btn muted">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="16 3 21 3 21 8" />
+                <line x1="4" y1="20" x2="21" y2="3" />
+                <polyline points="21 16 21 21 16 21" />
+                <line x1="4" y1="4" x2="21" y2="21" />
+              </svg>
+            </button>
+            <button class="ctrl-btn">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <polygon points="19,20 9,12 19,4" />
+                <rect x="5" y="4" width="2" height="16" />
+              </svg>
+            </button>
+            <button class="play-btn" id="playBtn">&#9654;</button>
+            <button class="ctrl-btn">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <polygon points="5,4 15,12 5,20" />
+                <rect x="17" y="4" width="2" height="16" />
+              </svg>
+            </button>
+            <button class="ctrl-btn muted">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="17 1 21 5 17 9" />
+                <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                <polyline points="7 23 3 19 7 15" />
+                <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+              </svg>
+            </button>
+          </div>
+          <div class="footer-note">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#999"
+              stroke-width="2"
+            >
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+              <path
+                d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"
+              />
+            </svg>
+            다음으로 넘어가기 전에 음악을 끝까지 들어주세요.
+          </div>
+        </div>
+
+        <!-- Right -->
+        <div class="right-panel">
+          <div class="info-card">
+            <div class="card-label">Information</div>
+            <div class="ai-badge">
+              <div class="robot-icon">🤖</div>
+              <div class="ai-text-block">
+                <div class="ai-title">AI 생성 음악</div>
+                <div class="ai-desc">이 음악은 AI툴을 통해 생성되었습니다.</div>
+              </div>
+            </div>
+          </div>
+          <div class="comments-card">
+            <div class="card-label">Anonymous Review</div>
+            <div class="comment-list">
+              <div class="comment-item">
+                <svg
+                  class="user-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#999"
+                  stroke-width="1.5"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span
+                  >평소에 클래식 음악을 즐겨 듣는 편은 아닌데, 이 곡은 처음부터
+                  자연스럽게 귀에 들어왔어요. 멜로디가 억지스럽지 않고 물
+                  흐르듯이 이어지는 느낌이라 듣는 내내 편안했어요. 중간중간
+                  감정이 고조되는 부분에서는 자연스럽게 몰입이 되더라고요.<br /><br />
+                  특별히 음악을 분석하면서 들은 건 아닌데도, 곡의 흐름이 잘
+                  짜여져 있다는 인상을 받았어요. 악기들이 서로 조화롭게
+                  어우러지면서 전체적으로 풍성한 느낌을 줬고, 어느 한 부분이
+                  튀거나 어색하다는 생각은 들지 않았어요.
+                  <br /><br />배경음악으로 틀어놓기에도 좋고, 집중해서 듣기에도
+                  괜찮은 곡인 것 같아요. 클래식에 익숙하지 않은 사람도 부담 없이
+                  즐길 수 있을 것 같다는 생각이 들었어요. <br /><br />전반적으로
+                  완성도가 높다는 느낌을 받았고, 듣고 나서도 여운이 남는
+                  곡이었어요. 다음에 또 찾아서 들을 것 같고, 주변에도 한번
+                  들어보라고 추천하고 싶어요. 클래식을 처음 접하는 사람한테도
+                  좋은 입문곡이 될 수 있을 것 같아요.</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const audioPlayer = document.getElementById("audioPlayer");
+      const playBtn = document.getElementById("playBtn");
+      const progressFill = document.getElementById("progressFill");
+      const currentTimeEl = document.getElementById("currentTime");
+      const durationEl = document.getElementById("duration");
+
+      // 음악 URL 설정 (사용자가 입력할 수 있게 함)
+      const musicUrl = prompt(
+        "음악 파일 URL을 입력하세요:",
+        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+      );
+      if (musicUrl) {
+        audioPlayer.src = musicUrl;
+      }
+
+      // 시간을 MM:SS 형식으로 변환
+      function formatTime(seconds) {
+        if (isNaN(seconds)) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+      }
+
+      // 재생/일시정지
+      playBtn.addEventListener("click", () => {
+        if (audioPlayer.paused) {
+          audioPlayer.play();
+          playBtn.textContent = "⏸";
+        } else {
+          audioPlayer.pause();
+          playBtn.textContent = "▶";
+        }
+      });
+
+      // 음악 재생 시간에 따라 진행률 바 업데이트
+      audioPlayer.addEventListener("timeupdate", () => {
+        const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+        progressFill.style.width = progress + "%";
+        currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+      });
+
+      // 음악 정보 로드 시 총 시간 표시
+      audioPlayer.addEventListener("loadedmetadata", () => {
+        durationEl.textContent = formatTime(audioPlayer.duration);
+      });
+
+      // 음악 재생 완료 시
+      audioPlayer.addEventListener("ended", () => {
+        playBtn.textContent = "▶";
+        progressFill.style.width = "0%";
+        audioPlayer.currentTime = 0;
+        currentTimeEl.textContent = "0:00";
+      });
+
+      // 진행률 바 클릭으로 원하는 위치로 이동
+      const progressBar = document.querySelector(".progress-bar-wrap");
+      progressBar.addEventListener("click", (e) => {
+        const rect = progressBar.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        audioPlayer.currentTime = percent * audioPlayer.duration;
+      });
+    </script>
+  </body>
+</html>
